@@ -1,0 +1,194 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+  <meta charset="UTF-8" />
+  <meta name="viewport" content="width=device-width, initial-scale=1.0"/>
+  <title>Farewell Messages - Person-wise Display</title>
+  <style>
+    body {
+      font-family: 'Segoe UI', Tahoma, Geneva, Verdana, sans-serif;
+      background: linear-gradient(to right, #ffecd2, #fcb69f);
+      margin: 0;
+      padding: 20px;
+      color: #333;
+    }
+
+    h1 {
+      text-align: center;
+      color: #e67e22;
+    }
+
+    .person-card {
+      background-color: #fff;
+      border-radius: 10px;
+      box-shadow: 0 4px 6px rgba(0, 0, 0, 0.1);
+      padding: 20px;
+      margin: 15px 0;
+      transition: all 0.3s ease;
+    }
+
+    .person-card h2 {
+      color: #e67e22;
+      font-size: 1.5em;
+      margin-bottom: 10px;
+    }
+
+    .toggle-button {
+      background-color: #e67e22;
+      border: none;
+      color: white;
+      padding: 10px 15px;
+      border-radius: 5px;
+      cursor: pointer;
+      font-weight: bold;
+      margin-bottom: 10px;
+      transition: background-color 0.3s;
+    }
+
+    .toggle-button:hover {
+      background-color: #d35400;
+    }
+
+    .message-container {
+      display: none;
+      margin-top: 10px;
+      animation: fadeIn 0.4s ease-in-out;
+    }
+
+    .message-grid {
+      display: grid;
+      grid-template-columns: 1fr 1fr;
+      gap: 15px;
+    }
+
+    .message {
+      background-color: #f6f6f6;
+      border-radius: 8px;
+      padding: 10px;
+      margin-bottom: 10px;
+    }
+
+    .message p {
+      margin: 0;
+      font-size: 1em;
+    }
+
+    .response-header {
+      font-weight: bold;
+      color: #2c3e50;
+      margin-bottom: 5px;
+    }
+
+    @keyframes fadeIn {
+      from { opacity: 0; }
+      to { opacity: 1; }
+    }
+  </style>
+</head>
+<body>
+  <h1>Farewell Messages - Person-wise Display</h1>
+
+  <input type="file" id="file-input" accept=".xlsx" />
+
+  <div id="messages"></div>
+
+  <script src="https://cdnjs.cloudflare.com/ajax/libs/xlsx/0.17.1/xlsx.full.min.js"></script>
+
+  <script>
+    const personColumns = [
+      "Abhinav bhaiya", "Vineet bhaiya", "Barde bhaiya", "Shiva bhaiya", "Anjana didi",
+      "priyanka didi", "Swati didi", "Nidhi didi", "Shubham Bhaiya", "Manas bhaiya"
+    ];
+
+    document.getElementById('file-input').addEventListener('change', handleFile, false);
+
+    function handleFile(event) {
+      const file = event.target.files[0];
+
+      if (file) {
+        const reader = new FileReader();
+
+        reader.onload = function(e) {
+          const data = e.target.result;
+          const workbook = XLSX.read(data, { type: 'binary' });
+          const sheet = workbook.Sheets[workbook.SheetNames[0]];
+          const rows = XLSX.utils.sheet_to_json(sheet, { header: 1 });
+
+          const container = document.getElementById('messages');
+          container.innerHTML = "";
+
+          rows.slice(1).forEach(row => {
+            const name = row[1];
+            const personCard = document.createElement('div');
+            personCard.className = 'person-card';
+
+            const cardTitle = document.createElement('h2');
+            cardTitle.textContent = `${name}`;
+            personCard.appendChild(cardTitle);
+
+            const toggleBtn = document.createElement('button');
+            toggleBtn.className = 'toggle-button';
+            toggleBtn.textContent = 'Show Messages';
+            personCard.appendChild(toggleBtn);
+
+            const messageContainer = document.createElement('div');
+            messageContainer.className = 'message-container';
+
+            const messageGrid = document.createElement('div');
+            messageGrid.className = 'message-grid';
+
+            const leftColumn = document.createElement('div');
+            const rightColumn = document.createElement('div');
+
+            // Filter messages for current person
+            const messages = [];
+            personColumns.forEach((person, index) => {
+              const response = row[index + 2];
+              if (response && response.trim() !== "") {
+                messages.push({ sender: person, content: response });
+              }
+            });
+
+            const half = Math.ceil(messages.length / 2);
+
+            messages.forEach((msg, idx) => {
+              const messageDiv = document.createElement('div');
+              messageDiv.className = 'message';
+
+              const responseHeader = document.createElement('div');
+              responseHeader.className = 'response-header';
+              responseHeader.textContent = msg.sender;
+              messageDiv.appendChild(responseHeader);
+
+              const messageContent = document.createElement('p');
+              messageContent.innerHTML = msg.content.replace(/\n/g, '<br>');
+              messageDiv.appendChild(messageContent);
+
+              if (idx < half) {
+                leftColumn.appendChild(messageDiv);
+              } else {
+                rightColumn.appendChild(messageDiv);
+              }
+            });
+
+            messageGrid.appendChild(leftColumn);
+            messageGrid.appendChild(rightColumn);
+            messageContainer.appendChild(messageGrid);
+
+            toggleBtn.addEventListener('click', () => {
+              const isVisible = messageContainer.style.display === 'block';
+              messageContainer.style.display = isVisible ? 'none' : 'block';
+              toggleBtn.textContent = isVisible ? 'Show Messages' : 'Hide Messages';
+            });
+
+            personCard.appendChild(messageContainer);
+            container.appendChild(personCard);
+          });
+        };
+
+        reader.readAsBinaryString(file);
+      }
+    }
+  </script>
+</body>
+</html>
