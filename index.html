@@ -87,9 +87,6 @@
 </head>
 <body>
   <h1>Farewell Messages - Person-wise Display</h1>
-
-  <input type="file" id="file-input" accept=".xlsx" />
-
   <div id="messages"></div>
 
   <script src="https://cdnjs.cloudflare.com/ajax/libs/xlsx/0.17.1/xlsx.full.min.js"></script>
@@ -100,17 +97,11 @@
       "priyanka didi", "Swati didi", "Nidhi didi", "Shubham Bhaiya", "Manas bhaiya"
     ];
 
-    document.getElementById('file-input').addEventListener('change', handleFile, false);
-
-    function handleFile(event) {
-      const file = event.target.files[0];
-
-      if (file) {
-        const reader = new FileReader();
-
-        reader.onload = function(e) {
-          const data = e.target.result;
-          const workbook = XLSX.read(data, { type: 'binary' });
+    window.onload = function () {
+      fetch('farewell_data.xlsx')
+        .then(response => response.arrayBuffer())
+        .then(data => {
+          const workbook = XLSX.read(data, { type: 'array' });
           const sheet = workbook.Sheets[workbook.SheetNames[0]];
           const rows = XLSX.utils.sheet_to_json(sheet, { header: 1 });
 
@@ -140,7 +131,6 @@
             const leftColumn = document.createElement('div');
             const rightColumn = document.createElement('div');
 
-            // Filter messages for current person
             const messages = [];
             personColumns.forEach((person, index) => {
               const response = row[index + 2];
@@ -184,11 +174,12 @@
             personCard.appendChild(messageContainer);
             container.appendChild(personCard);
           });
-        };
-
-        reader.readAsBinaryString(file);
-      }
-    }
+        })
+        .catch(error => {
+          const container = document.getElementById('messages');
+          container.innerHTML = `<p style="color:red;">Error loading Excel file: ${error}</p>`;
+        });
+    };
   </script>
 </body>
 </html>
